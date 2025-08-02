@@ -142,8 +142,8 @@ async def main():
     asyncio.ensure_future(periodic_save())
 
     # noinspection PyTypeChecker
-    async with websockets.serve(conn, "localhost", 6969):
-        print("WebSocket server started on ws://localhost:6969")
+    async with websockets.serve(conn, "0.0.0.0", 6969):
+        print("WebSocket server started on ws://0.0.0.0:6969")
         await asyncio.Future()
 
 
