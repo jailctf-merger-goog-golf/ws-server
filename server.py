@@ -78,6 +78,8 @@ async def receive_messages(websocket):
                 task = msg['task']
 
                 websocket.task = task
+                await websocket.send(json.dumps({"type": "set-listen-done"}))
+                continue
 
             # update the solution or annotation for a task
             elif msg['type'] == "update":
