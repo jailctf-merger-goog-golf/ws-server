@@ -43,7 +43,6 @@ async def send_messages(websocket):
         await asyncio.sleep(0.02)
         if websocket.task is None:
             continue
-        print(mem_db)
         msg = {
             'timing': time(),
             'solution': mem_db[websocket.task]['solution'],
