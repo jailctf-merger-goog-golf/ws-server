@@ -4,6 +4,16 @@ import websockets
 import json
 import os
 from time import time
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Access variables using os.getenv()
+SAFETY_KEY = os.getenv('SAFETY_KEY')
+if SAFETY_KEY is None:
+    print("NO SAFETY KEY IN .env ALERT ALERT BAD BAD SET IT NOW")
+    exit(1)
 
 os.makedirs('./working/', exist_ok=True)
 
@@ -46,9 +56,16 @@ async def receive_messages(websocket):
     try:
         async for msg_text in websocket:
 
-            print(msg_text)
-
             msg = json.loads(msg_text)
+
+            if ('safety_key' not in msg) or (not isinstance(msg['safety_key'], str)):
+                await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have string 'safety_key'"}))
+                continue
+
+            if msg['safety_key'] != SAFETY_KEY:
+                await websocket.send(json.dumps({"type": "error", "error_msg": "lol no"}))
+                continue
+
             if ('type' not in msg) or (not isinstance(msg['type'], str)):
                 await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have string 'type'"}))
                 continue
@@ -70,6 +87,11 @@ async def receive_messages(websocket):
                     await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have integer 'task'"}))
                     continue
                 task = msg['task']
+
+                if task != websocket.task:
+                    await websocket.send(
+                        json.dumps({"type": "error", "error_msg": "cant update task that you are not viewing for safety"}))
+                    continue
 
                 if ('timing' not in msg) or (not isinstance(msg['timing'], float)):
                     await websocket.send(
