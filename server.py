@@ -1,4 +1,5 @@
 import asyncio
+import random
 
 import websockets
 import json
@@ -79,6 +80,14 @@ async def receive_messages(websocket):
 
                 websocket.task = task
                 await websocket.send(json.dumps({"type": "set-listen-done"}))
+                continue
+
+            # random unsolved
+            if msg['type'] == 'random-unsolved':
+
+                task = random.choice([n for n in mem_db if len(mem_db[n]['solution']) == 0])
+
+                await websocket.send(json.dumps({"type": "random-unsolved", "task": task}))
                 continue
 
             # update the solution or annotation for a task
