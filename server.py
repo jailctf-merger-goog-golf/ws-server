@@ -35,7 +35,9 @@ def save_mem_db():
 
 
 def remote_save(vals):
-    get(f"https://script.google.com/macros/s/AKfycbwq9w85yM5C7rRvYCYJoDmp5IEZFj3s-UpZh5sHMh15i4IBA82RYMrE4I9xcmTe81IRRw/exec?vals={vals}", timeout=5.0)
+    with open("update-sheet-url.txt", 'r') as f:
+        url = f.read()
+    get(f"{url}?vals={vals}", timeout=5.0)
 
 
 # function to save periodically
