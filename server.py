@@ -1,6 +1,7 @@
 import asyncio
 import random
 
+from requests import get
 import websockets
 import json
 import os
@@ -36,6 +37,11 @@ def save_mem_db():
 async def periodic_save():
     while True:
         save_mem_db()
+        try:
+            vals = ",".join([str(len(mem_db[n]['solution'])) for n in range(1, 401)])
+            get(f"https://script.google.com/macros/s/AKfycbwdx5o1D7bQxLX9m5wKC9hqdyIaGKrzjSa_lmLhq-3NdITY_VZgmBgF0zcvGR4KvxSL/exec?vals={vals}", timeout=5.0)
+        except Exception as e:
+            print("exc (bad):", e)
         await asyncio.sleep(30)  # every 30s save to disk
 
 
