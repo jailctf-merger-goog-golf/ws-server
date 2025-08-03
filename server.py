@@ -6,6 +6,7 @@ import websockets
 import json
 import os
 from time import time
+from _thread import start_new_thread
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -33,13 +34,17 @@ def save_mem_db():
     print(f"mem db saved at {time()}")
 
 
+def remote_save(vals):
+    get(f"https://script.google.com/macros/s/AKfycbwdx5o1D7bQxLX9m5wKC9hqdyIaGKrzjSa_lmLhq-3NdITY_VZgmBgF0zcvGR4KvxSL/exec?vals={vals}", timeout=5.0)
+
+
 # function to save periodically
 async def periodic_save():
     while True:
         save_mem_db()
         try:
             vals = ",".join([str(len(mem_db[n]['solution'])) for n in range(1, 401)])
-            get(f"https://script.google.com/macros/s/AKfycbwdx5o1D7bQxLX9m5wKC9hqdyIaGKrzjSa_lmLhq-3NdITY_VZgmBgF0zcvGR4KvxSL/exec?vals={vals}", timeout=5.0)
+            start_new_thread(remote_save, (vals,))
         except Exception as e:
             print("exc (bad):", e)
         await asyncio.sleep(30)  # every 30s save to disk
