@@ -43,7 +43,7 @@ async def periodic_save():
     while True:
         save_mem_db()
         try:
-            vals = ",".join([str(len(mem_db[n]['solution'])) for n in range(1, 401)])
+            vals = ",".join([str(len(mem_db[n]['solution']) if len(mem_db[n]['solution']) else 2500) for n in range(1, 401)])
             start_new_thread(remote_save, (vals,))
         except Exception as e:
             print("exc (bad):", e)
