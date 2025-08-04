@@ -41,7 +41,7 @@ def remote_save(vals):
 
     with open("update-sols-sheet-url.txt", 'r') as f:
         url = f.read()
-    post(url, data=json.dumps([mem_db[n]["solution"] for n in range(400)]), timeout=10.0)
+    post(url, data=json.dumps([mem_db[n]["solution"] for n in range(1,401)]), timeout=10.0)
 
 
 # function to save periodically
