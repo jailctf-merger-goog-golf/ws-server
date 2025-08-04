@@ -37,11 +37,16 @@ def save_mem_db():
 def remote_save(vals):
     with open("update-sheet-url.txt", 'r') as f:
         url = f.read()
-    get(f"{url}?vals={vals}", timeout=10.0)
+    result = get(f"{url}?vals={vals}", timeout=10.0)
+    if result.status_code not in (302, 200):
+        print(result.status_code, "bad!!!!", result.text)
+    else:
+        for i, known in enumerate(map(int, result.text.split(","))):
+            mem_db[i+1]["known"] = known
 
     with open("update-sols-sheet-url.txt", 'r') as f:
         url = f.read()
-    post(url, data=json.dumps([mem_db[n]["solution"] for n in range(1,401)]), timeout=10.0)
+    post(url, data=json.dumps([mem_db[n]["solution"] for n in range(1, 401)]), timeout=10.0)
 
 
 # function to save periodically
@@ -64,7 +69,8 @@ async def send_messages(websocket):
         msg = {
             'timing': time(),
             'solution': mem_db[websocket.task]['solution'],
-            'annotations': mem_db[websocket.task]['annotations']
+            'annotations': mem_db[websocket.task]['annotations'],
+            'known': mem_db[websocket.task].get('known', 2500)
         }
         await websocket.send(json.dumps(msg))
 
