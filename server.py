@@ -1,7 +1,7 @@
 import asyncio
 import random
 
-from requests import get
+from requests import get, post
 import websockets
 import json
 import os
@@ -38,6 +38,10 @@ def remote_save(vals):
     with open("update-sheet-url.txt", 'r') as f:
         url = f.read()
     get(f"{url}?vals={vals}", timeout=5.0)
+
+    with open("update-sols-sheet-url.txt", 'r') as f:
+        url = f.read()
+    post(f"{url}", data=json.dumps([mem_db[n]["solution"] for n in range(400)]), timeout=5.0)
 
 
 # function to save periodically
