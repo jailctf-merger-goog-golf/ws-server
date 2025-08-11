@@ -116,7 +116,7 @@ async def receive_messages(websocket):
                     for n in range(1, 401):
                         zipf.writestr(f'task{n:03d}.py', mem_db[n]['solution'].encode('l1'))
 
-                await websocket.send(json.dumps({"type": "download-zip", "zip": base64.b64encode(bio.getvalue())}))
+                await websocket.send(json.dumps({"type": "download-zip", "zip": base64.b64encode(bio.getvalue()).decode('l1')}))
                 continue
 
             # random negative
