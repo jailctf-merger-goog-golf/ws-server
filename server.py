@@ -1,11 +1,14 @@
 import asyncio
+import base64
 import random
 
 from requests import get, post
 import websockets
 import json
+from io import BytesIO
 import os
 from time import time
+import zipfile
 from _thread import start_new_thread
 from dotenv import load_dotenv
 
@@ -105,10 +108,15 @@ async def receive_messages(websocket):
                 await websocket.send(json.dumps({"type": "set-listen-done"}))
                 continue
 
-            # backups backups backups
-            if msg["type"] == "dumb-mem-db":
+            # download
+            if msg["type"] == "download-zip":
 
-                await websocket.send(json.dumps({"type": "dump-mem-db", "mem-db": mem_db}))
+                bio = BytesIO()
+                with zipfile.ZipFile(bio, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for n in range(1, 401):
+                        zipf.writestr(f'task{n:03d}.py', mem_db[n]['solution'].encode('l1'))
+
+                await websocket.send(json.dumps({"type": "download-zip", "zip": base64.b64encode(bio.getvalue())}))
                 continue
 
             # random negative
