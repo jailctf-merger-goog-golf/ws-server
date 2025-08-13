@@ -66,7 +66,7 @@ async def periodic_save():
 
 async def send_messages(websocket):
     while True:
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(0.05)
         if websocket.task is None:
             continue
         msg = {
@@ -159,7 +159,7 @@ async def receive_messages(websocket):
                         json.dumps({"type": "error", "error_msg": "data has to have integer 'timing'"}))
                     continue
 
-                if abs(msg['timing']-time()) > 2.0:  # max latency
+                if abs(msg['timing']-time()) > 5.0:  # max latency
                     await websocket.send(
                         json.dumps({"type": "error", "error_msg": "excessive latency, update denied"}))
                     continue
