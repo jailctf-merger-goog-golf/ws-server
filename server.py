@@ -10,6 +10,9 @@ import os
 from time import time
 import zipfile
 from _thread import start_new_thread
+from typing import Set, Dict
+from collections import defaultdict
+from weakref import WeakSet
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -22,6 +25,12 @@ if SAFETY_KEY is None:
     exit(1)
 
 os.makedirs('./working/', exist_ok=True)
+
+
+# deepseek suggested i use weak sets for some reason which how does it work if its pointing
+# to random garbage data after a new object is allocated there idk
+active_connections: WeakSet[websockets.WebSocketServerProtocol] = WeakSet()
+task_connections: Dict[int, WeakSet[websockets.WebSocketServerProtocol]] = defaultdict(WeakSet)
 
 mem_db: [int, dict] = {}
 
@@ -66,14 +75,15 @@ async def periodic_save():
 
 async def send_messages(websocket):
     while True:
-        await asyncio.sleep(0.05)
+        await asyncio.sleep(0.02)
         if websocket.task is None:
             continue
         msg = {
             'timing': time(),
             'solution': mem_db[websocket.task]['solution'],
             'annotations': mem_db[websocket.task]['annotations'],
-            'known': mem_db[websocket.task].get('known', 2500)
+            'known': mem_db[websocket.task].get('known', 2500),
+            'number-listening': len(task_connections[websocket.task])
         }
         await websocket.send(json.dumps(msg))
 
@@ -104,7 +114,11 @@ async def receive_messages(websocket):
                     continue
                 task = msg['task']
 
+                if websocket.task is not None and websocket in task_connections[websocket.task]:
+                    task_connections[websocket.task].remove(websocket)
+
                 websocket.task = task
+                task_connections[task].add(websocket)
                 await websocket.send(json.dumps({"type": "set-listen-done"}))
                 continue
 
@@ -195,12 +209,20 @@ async def receive_messages(websocket):
 
 async def conn(websocket):
     websocket.task = None
+    active_connections.add(websocket)
 
-    send_task = asyncio.create_task(send_messages(websocket))
-    receive_task = asyncio.create_task(receive_messages(websocket))
+    try:
+        print("client connected")
+        send_task = asyncio.create_task(send_messages(websocket))
+        receive_task = asyncio.create_task(receive_messages(websocket))
 
-    # Wait for both tasks to complete (or for some other termination condition)
-    await asyncio.gather(send_task, receive_task)
+        # Wait for both tasks to complete (or for some other termination condition)
+        await asyncio.gather(send_task, receive_task)
+    finally:
+        print('client disconnected')
+        if websocket.task is not None and websocket in task_connections[websocket.task]:
+            task_connections[websocket.task].remove(websocket)
+        active_connections.discard(websocket)
 
 
 DEFAULT_TASK_DATA = {
