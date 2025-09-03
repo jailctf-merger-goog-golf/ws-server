@@ -155,6 +155,17 @@ async def receive_messages(websocket):
                     await websocket.send(json.dumps({"type": "random-unsolved", "task": task}))
                 continue
 
+            # random positive
+            if msg['type'] == 'random-positive':
+
+                available = [n for n in mem_db if len(mem_db[n]['solution']) < mem_db[n].get('known', 2500)]
+                if len(available) == 0:
+                    await websocket.send(json.dumps({"type": "error", "error_msg": "you suck ass wtf garbage tier"}))
+                else:
+                    task = random.choice(available)
+                    await websocket.send(json.dumps({"type": "random-negative", "task": task}))
+                continue
+
             # update the solution or annotation for a task
             elif msg['type'] == "update":
 
