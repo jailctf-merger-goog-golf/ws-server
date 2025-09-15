@@ -144,15 +144,15 @@ async def receive_messages(websocket):
                     await websocket.send(json.dumps({"type": "random-negative", "task": task}))
                 continue
 
-            # random unsolved
-            if msg['type'] == 'random-unsolved':
+            # random neutral
+            if msg['type'] == 'random-neutral':
 
-                available = [n for n in mem_db if len(mem_db[n]['solution']) == 0]
+                available = [n for n in mem_db if len(mem_db[n]['solution']) == mem_db[n].get('known', 2500)]
                 if len(available) == 0:
-                    await websocket.send(json.dumps({"type": "error", "error_msg": "uhhh go finish the negative ones there are no unsolved ones left"}))
+                    await websocket.send(json.dumps({"type": "error", "error_msg": "me when i am polarized"}))
                 else:
                     task = random.choice(available)
-                    await websocket.send(json.dumps({"type": "random-unsolved", "task": task}))
+                    await websocket.send(json.dumps({"type": "random-neutral", "task": task}))
                 continue
 
             # random positive
