@@ -140,6 +140,7 @@ async def receive_messages(websocket):
                     try:
                         filter_min = int(msg["filter_min"])
                     except Exception as e:
+                        print(e, type(e))
                         await websocket.send(json.dumps({"type": "error", "error_msg": str(e)}))
                         continue
                 if "filter-max" in msg:
