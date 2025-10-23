@@ -133,38 +133,69 @@ async def receive_messages(websocket):
                 await websocket.send(json.dumps({"type": "download-zip", "zip": base64.b64encode(bio.getvalue()).decode('l1')}))
                 continue
 
-            # random negative
-            if msg["type"] == "random-negative":
+            if msg["type"][:6] == "random":
+                filter_min = 0
+                filter_max = 100000
+                if "filter-min" in msg:
+                    try:
+                        filter_min = int(msg["filter_min"])
+                    except Exception as e:
+                        await websocket.send(json.dumps({"type": "error", "error_msg": str(e)}))
+                        continue
+                if "filter-max" in msg:
+                    try:
+                        filter_max = int(msg["filter_max"])
+                    except Exception as e:
+                        await websocket.send(json.dumps({"type": "error", "error_msg": str(e)}))
+                        continue
 
-                available = [n for n in mem_db if len(mem_db[n]['solution']) > mem_db[n].get('known', 2500)]
-                if len(available) == 0:
-                    await websocket.send(json.dumps({"type": "error", "error_msg": "omg congrats !!!!"}))
-                else:
-                    task = random.choice(available)
-                    await websocket.send(json.dumps({"type": "random-negative", "task": task}))
-                continue
+                # random negative
+                if msg["type"] == "random-negative":
 
-            # random neutral
-            if msg['type'] == 'random-neutral':
+                    available = [n for n in mem_db if len(mem_db[n]['solution']) > mem_db[n].get('known', 2500)]
+                    available = [n for n in available if
+                                 filter_min < min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) < filter_max]
+                    if len(available) == 0:
+                        if filter_min == 0 and filter_max >= 2500:
+                            await websocket.send(json.dumps({"type": "error", "error_msg": "omg congrats !!!!"}))
+                        else:
+                            await websocket.send(json.dumps({"type": "error", "error_msg": "none available"}))
+                    else:
+                        task = random.choice(available)
+                        await websocket.send(json.dumps({"type": "random-negative", "task": task}))
+                    continue
 
-                available = [n for n in mem_db if len(mem_db[n]['solution']) == mem_db[n].get('known', 2500)]
-                if len(available) == 0:
-                    await websocket.send(json.dumps({"type": "error", "error_msg": "me when i am polarized"}))
-                else:
-                    task = random.choice(available)
-                    await websocket.send(json.dumps({"type": "random-neutral", "task": task}))
-                continue
+                # random neutral
+                if msg['type'] == 'random-neutral':
 
-            # random positive
-            if msg['type'] == 'random-positive':
+                    available = [n for n in mem_db if len(mem_db[n]['solution']) == mem_db[n].get('known', 2500)]
+                    available = [n for n in available if
+                                 filter_min < min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) < filter_max]
+                    if len(available) == 0:
+                        if filter_min == 0 and filter_max >= 2500:
+                            await websocket.send(json.dumps({"type": "error", "error_msg": "me when i am polarized"}))
+                        else:
+                            await websocket.send(json.dumps({"type": "error", "error_msg": "none available"}))
+                    else:
+                        task = random.choice(available)
+                        await websocket.send(json.dumps({"type": "random-neutral", "task": task}))
+                    continue
 
-                available = [n for n in mem_db if len(mem_db[n]['solution']) < mem_db[n].get('known', 2500)]
-                if len(available) == 0:
-                    await websocket.send(json.dumps({"type": "error", "error_msg": "you suck ass wtf garbage tier"}))
-                else:
-                    task = random.choice(available)
-                    await websocket.send(json.dumps({"type": "random-negative", "task": task}))
-                continue
+                # random positive
+                if msg['type'] == 'random-positive':
+
+                    available = [n for n in mem_db if len(mem_db[n]['solution']) < mem_db[n].get('known', 2500)]
+                    available = [n for n in available if
+                                 filter_min < min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) < filter_max]
+                    if len(available) == 0:
+                        if filter_min == 0 and filter_max >= 2500:
+                            await websocket.send(json.dumps({"type": "error", "error_msg": "you suck ass wtf garbage tier"}))
+                        else:
+                            await websocket.send(json.dumps({"type": "error", "error_msg": "none available"}))
+                    else:
+                        task = random.choice(available)
+                        await websocket.send(json.dumps({"type": "random-negative", "task": task}))
+                    continue
 
             # update the solution or annotation for a task
             elif msg['type'] == "update":
