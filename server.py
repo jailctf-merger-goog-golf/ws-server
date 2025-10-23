@@ -171,7 +171,7 @@ async def receive_messages(websocket):
 
                     available = [n for n in mem_db if len(mem_db[n]['solution']) == mem_db[n].get('known', 2500)]
                     available = [n for n in available if
-                                 filter_min < min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) < filter_max]
+                                 filter_min <= min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) <= filter_max]
                     if len(available) == 0:
                         if filter_min == 0 and filter_max >= 2500:
                             await websocket.send(json.dumps({"type": "error", "error_msg": "me when i am polarized"}))
@@ -187,7 +187,7 @@ async def receive_messages(websocket):
 
                     available = [n for n in mem_db if len(mem_db[n]['solution']) < mem_db[n].get('known', 2500)]
                     available = [n for n in available if
-                                 filter_min < min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) < filter_max]
+                                 filter_min <= min(len(mem_db[n]['solution']), mem_db[n].get('known', 2500)) <= filter_max]
                     if len(available) == 0:
                         if filter_min == 0 and filter_max >= 2500:
                             await websocket.send(json.dumps({"type": "error", "error_msg": "you suck ass wtf garbage tier"}))
