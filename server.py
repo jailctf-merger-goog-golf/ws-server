@@ -98,9 +98,9 @@ async def receive_messages(websocket):
                 await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have string 'safety_key'"}))
                 continue
 
-            if msg['safety_key'] != SAFETY_KEY:
-                await websocket.send(json.dumps({"type": "error", "error_msg": "lol no"}))
-                continue
+            # if msg['safety_key'] != SAFETY_KEY:
+            #     await websocket.send(json.dumps({"type": "error", "error_msg": "lol no"}))
+            #     continue
 
             if ('type' not in msg) or (not isinstance(msg['type'], str)):
                 await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have string 'type'"}))
@@ -123,15 +123,15 @@ async def receive_messages(websocket):
                 continue
 
             # download
-            if msg["type"] == "download-zip":
-
-                bio = BytesIO()
-                with zipfile.ZipFile(bio, 'w', zipfile.ZIP_DEFLATED) as zipf:
-                    for n in range(1, 401):
-                        zipf.writestr(f'task{n:03d}.py', mem_db[n]['solution'].encode('l1'))
-
-                await websocket.send(json.dumps({"type": "download-zip", "zip": base64.b64encode(bio.getvalue()).decode('l1')}))
-                continue
+            # if msg["type"] == "download-zip":
+            #
+            #     bio = BytesIO()
+            #     with zipfile.ZipFile(bio, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            #         for n in range(1, 401):
+            #             zipf.writestr(f'task{n:03d}.py', mem_db[n]['solution'].encode('l1'))
+            #
+            #     await websocket.send(json.dumps({"type": "download-zip", "zip": base64.b64encode(bio.getvalue()).decode('l1')}))
+            #     continue
 
             if msg["type"][:6] == "random":
                 filter_min = 0
@@ -199,46 +199,46 @@ async def receive_messages(websocket):
                     continue
 
             # update the solution or annotation for a task
-            elif msg['type'] == "update":
-
-                if ('task' not in msg) or (not isinstance(msg['task'], int)):
-                    await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have integer 'task'"}))
-                    continue
-                task = msg['task']
-
-                if task != websocket.task:
-                    await websocket.send(
-                        json.dumps({"type": "error", "error_msg": "cant update task that you are not viewing for safety"}))
-                    continue
-
-                if ('timing' not in msg) or (not isinstance(msg['timing'], float)):
-                    await websocket.send(
-                        json.dumps({"type": "error", "error_msg": "data has to have integer 'timing'"}))
-                    continue
-
-                if abs(msg['timing']-time()) > 5.0:  # max latency
-                    await websocket.send(
-                        json.dumps({"type": "error", "error_msg": "excessive latency, update denied"}))
-                    continue
-
-                has_solution = ('solution' in msg) and (isinstance(msg['solution'], str))
-                has_annotations = ('annotations' in msg) and (isinstance(msg['annotations'], str))
-                if not (has_annotations or has_solution):
-                    await websocket.send(
-                        json.dumps({"type": "error", "error_msg": "requires either 'annotation' or 'solution'"}))
-                    continue
-
-                if has_solution and has_annotations:  # to prevent potential issues
-                    await websocket.send(json.dumps({"type": "error", "error_msg": "thats sus ...."}))
-                    continue
-
-                if has_solution:
-                    mem_db[task]['solution'] = msg['solution']
-
-                if has_annotations:
-                    mem_db[task]['annotations'] = msg['annotations']
-
-                mem_db[task]['dirty'] = True
+            # elif msg['type'] == "update":
+            #
+            #     if ('task' not in msg) or (not isinstance(msg['task'], int)):
+            #         await websocket.send(json.dumps({"type": "error", "error_msg": "data has to have integer 'task'"}))
+            #         continue
+            #     task = msg['task']
+            #
+            #     if task != websocket.task:
+            #         await websocket.send(
+            #             json.dumps({"type": "error", "error_msg": "cant update task that you are not viewing for safety"}))
+            #         continue
+            #
+            #     if ('timing' not in msg) or (not isinstance(msg['timing'], float)):
+            #         await websocket.send(
+            #             json.dumps({"type": "error", "error_msg": "data has to have integer 'timing'"}))
+            #         continue
+            #
+            #     if abs(msg['timing']-time()) > 5.0:  # max latency
+            #         await websocket.send(
+            #             json.dumps({"type": "error", "error_msg": "excessive latency, update denied"}))
+            #         continue
+            #
+            #     has_solution = ('solution' in msg) and (isinstance(msg['solution'], str))
+            #     has_annotations = ('annotations' in msg) and (isinstance(msg['annotations'], str))
+            #     if not (has_annotations or has_solution):
+            #         await websocket.send(
+            #             json.dumps({"type": "error", "error_msg": "requires either 'annotation' or 'solution'"}))
+            #         continue
+            #
+            #     if has_solution and has_annotations:  # to prevent potential issues
+            #         await websocket.send(json.dumps({"type": "error", "error_msg": "thats sus ...."}))
+            #         continue
+            #
+            #     if has_solution:
+            #         mem_db[task]['solution'] = msg['solution']
+            #
+            #     if has_annotations:
+            #         mem_db[task]['annotations'] = msg['annotations']
+            #
+            #     mem_db[task]['dirty'] = True
             else:
                 await websocket.send(json.dumps({"type": "error", "error_msg": f"unknown type of '{msg['type']}'"}))
                 continue
